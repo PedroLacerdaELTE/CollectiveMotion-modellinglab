@@ -1,51 +1,8 @@
-from typing import Iterable
-
 import numpy as np
 import pandas as pd
 import os
 import dill as pickle
 import yaml
-
-from calc.geometry import get_cartesian_velocity_on_rotating_frame_from_inertial_frame
-
-
-def get_single_bird_burst(path_to_file, sanitize=True):
-    df = pd.read_csv(path_to_file, sep='\t', header=1)
-    df.reset_index(inplace=True)
-    new_columns = df.columns.values[1:].tolist() + ['bird_name']
-    df.columns = new_columns
-
-    # column names sanitizing
-    if sanitize:
-        column_names = df.columns
-        column_names = [
-            col.replace('[', '(').replace(']', ')').replace('(m/s)', '').replace('(m/s2)', '').replace('(m)', '')
-            for col in column_names]
-
-        df.columns = column_names
-        df.rename(columns={'#t(centisec)': 'time'}, inplace=True)
-
-    return df
-
-
-def get_burst(root_path, sanitize=True):
-    df = pd.DataFrame()
-
-    for file in os.listdir(root_path):
-        current_burst = get_single_bird_burst(os.path.join(root_path, file), sanitize=False)
-        df = pd.concat([df, current_burst])
-
-    # column names sanitizing
-    column_names = df.columns
-    column_names = [
-        col.replace('[', '(').replace(']', ')').replace('(m/s)', '').replace('(m/s2)', '').replace('(m)', '')
-        for col in column_names]
-
-    df.columns = column_names
-    df.rename(columns={'#t(centisec)': 'time'}, inplace=True)
-    df.reset_index(inplace=True)
-    df.rename(columns={'index': 'bird_time_index'}, inplace=True)
-    return df
 
 
 def load_decomposition_data(path, list_of_files=None, iteration=None):
@@ -121,11 +78,3 @@ def load_synthetic_and_decomposed(path_to_decomposition, list_of_files=None, inp
     synthetic_data_dict = load_synthetic_data(path_to_synthetic_data, list_of_object=list_of_files)
 
     return synthetic_data_dict, decomposition_dict
-
-
-def get_standardized_decomposed_and_real_data(df_iteration, df_real, AirVelocityField):
-
-    df_iteration['d2ZdT2_bird'] = df_iteration['d2ZdT2_bird_3']
-
-
-    return df_iteration, df_real

@@ -5,7 +5,6 @@ from scipy.interpolate import splprep, splev, splrep, UnivariateSpline, RegularG
 from calc.flight import get_bank_angle_from_radius, \
     get_min_sink_rate_from_bank_angle, get_horizontal_velocity_from_bird_parameters
 from calc.geometry import pf_get_curvature_from_trajectory, pf_get_radius_from_curvature
-from numba import njit, float64
 
 
 def get_regular_grid_from_irregular_data(x_array, y_array, *dependent_arrays, resolution):
@@ -25,20 +24,6 @@ def get_regular_grid_from_irregular_data(x_array, y_array, *dependent_arrays, re
     v_i = [interpolator(Xi, Yi) for interpolator in interpolators]
 
     return Xi, Yi, v_i
-
-
-@njit
-def get_numba_meshgrid_3D(x, y, z):
-    xx = np.empty(shape=(x.size, y.size, z.size), dtype=x.dtype)
-    yy = np.empty(shape=(x.size, y.size, z.size), dtype=y.dtype)
-    zz = np.empty(shape=(x.size, y.size, z.size), dtype=z.dtype)
-    for i in range(z.size):
-        for j in range(y.size):
-            for k in range(x.size):
-                xx[i,j,k] = k  # change to x[k] if indexing xy
-                yy[i,j,k] = j  # change to y[j] if indexing xy
-                zz[i,j,k] = i  # change to z[i] if indexing xy
-    return xx, yy, zz
 
 
 def parse_projection_string(projection_str):
@@ -221,7 +206,6 @@ def get_flight_characteristics(df_track, bird_parameters, state_vector_columns=N
     return df_calc
 
 
-@njit('float64[::1](float64[::1], float64, int32)')
 def get_3_point_stencil_differentiation(data_array, dt, n=1):
     assert n in [1, 2], 'the order of differentiation n must be 1, 2, 3 or 4'
     if n == 1:
@@ -235,12 +219,13 @@ def get_3_point_stencil_differentiation(data_array, dt, n=1):
     result_size = max(M, N) - min(M, N) + 1
     # numba does not support numpy.convolve with the 'mode' argument.
     # Therefore we need to cut the unwanted data manually
-    result = np.empty(shape=result_size, dtype=float64)
+    result = np.empty(shape=result_size, dtype=float)
     result = np.convolve(data_array, weights,
                          #mode='valid'
                          )[2:-2]
     return result
-@njit('float64[::1](float64[::1], float64, int32)')
+
+
 def get_5_point_stencil_differentiation(data_array, dt, n=1):
     assert n in [1, 2, 3, 4], 'the order of differentiation n must be 1, 2, 3 or 4'
     if n == 1:
@@ -260,7 +245,7 @@ def get_5_point_stencil_differentiation(data_array, dt, n=1):
     result_size = max(M, N) - min(M, N) + 1
     # numba does not support numpy.convolve with the 'mode' argument.
     # Therefore we need to cut the unwanted data manually
-    result = np.empty(shape=result_size, dtype=float64)
+    result = np.empty(shape=result_size, dtype=float)
     result = np.convolve(data_array, weights,
                          #mode='valid'
                          )[4:-4]

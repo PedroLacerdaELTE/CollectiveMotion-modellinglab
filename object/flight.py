@@ -1,8 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from calc.control import get_thermal_core_estimation, get_bank_angle_from_delta_V, get_orthogonal_unit_vector, \
-    get_bank_angle_update_reichmann
+from calc.control import get_thermal_core_estimation, get_bank_angle_from_delta_V, get_orthogonal_unit_vector
 from calc.flight import get_horizontal_velocity_from_bird_parameters, get_min_sink_rate_from_bank_angle, \
     get_radius_from_bank_angle, get_bank_angle_from_radius
 from calc.geometry import get_curvature_from_trajectory, get_radius_from_curvature
